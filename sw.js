@@ -1,4 +1,4 @@
-const PREFIX = "v5";
+const PREFIX = "v1";
 const CACHE_FILES = [
     '/offline.html',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css'
@@ -38,7 +38,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', event => {
     // note : activate preserve logs in dev tool
     console.log(`Fetching : ${event.request.url}, Mode : ${event.request.mode}`);
-
     // on capte les navigations utilisateur 'navigate'
     if(event.request.mode === 'navigate') {
         event.respondWith( 
@@ -63,8 +62,9 @@ self.addEventListener('fetch', event => {
                         return await cache.match('/offline.html');
                 }    
             })()
-        );
+        );        
     } else if( CACHE_FILES.includes(event.request.url)) {
+        // Mise en cache des fichiers 
         event.respondWith(caches.match(event.request));
     }  
 

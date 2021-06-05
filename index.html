@@ -22,8 +22,155 @@
             }
         })
     </script>
+
+    <style>
+        a {text-decoration:none;}
+        a:hover{text-decoration: underline;}
+
+        ul { list-style:none;padding:0;}   
+        label {
+            margin:1rem 0 .5rem;
+        }
+        .form-group button {
+            margin-top:1rem;
+            padding-left:auto;
+            margin-left:auto;
+        }
+        form .form-group:last-child {text-align:right;}
+
+    </style>
 </head>
-<body>
-    <h1>PWA</h1>
+<body class="p-4">
+
+    <header class="d-flex justify-content-between align-items-center border-bottom border-info">
+        
+        <h1 class="text-info">PWA</h1>
+        <ul class="d-flex">
+            <li>
+                Items : <span class="items-number">1</span>
+            </li>
+        </ul>
+        <nav>
+            <a href="" title="">Contacts</a>
+            <a href="" title="">Documents</a>
+            <a href="" title="">Outils (Export)</a>
+            <a href="" title="">A propos</a>
+        </nav>
+    </header>
+
+    <main>
+
+
+        <form action="" method="post" class="mt-4">
+            <h2>Ajouter un item</h2>
+            <div class="form-group">
+                <label for="">Titre</label>
+                <input type="text" name="title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="">Description</label>
+                <textarea name="body" class="form-control">Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias rerum aliquid, </textarea>  
+            </div>            
+            <div class="form-group">
+                <button class="btn btn-success">Enregistrer</button>
+            </div>
+        </form>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Items à synchroniser <span class="h5">(<a href="" title="Synchroniser les données">Synchroniser</a>)</span></h2>
+            
+        </div>
+        <ul class="items-waiting"></ul>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Items enregistrés</h2>
+        </div>
+        <ul class="items-registered"></ul>
+    </main>
+
+
+
+    <script>
+
+
+        // submit form
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let data = new FormData(form);
+            register(data);
+        })
+
+        function register(item) {
+
+            // test connexion
+            let isOnline = false;
+
+            if(isOnline) {
+                // register online
+                    // fetch post
+
+            } else {        
+                
+                // register local 
+                itemList = JSON.parse(localStorage.getItem("items"));
+                itemList.push(
+                    {
+                        "userId": 1,
+                        "id": "",
+                        "title": item.get('title'),
+                        "body": item.get('body'),
+                    } 
+                );
+                updateStore(itemList);  
+            }       
+        }
+
+
+    getData('https://jsonplaceholder.typicode.com/posts/');
+    // Fetch / get data from url 
+    async function getData(url) {
+        try {
+            const items = await fetch(url).then(data => data.json());                     
+            updateStore(items);    //stock les données dans le local storage    
+        } catch (e) {
+            console.log('Erreur : ' + e);
+        }
+    }
+
+    function updateStore(items) {
+        localStorage.setItem("items", JSON.stringify(items));                  
+        updateItems();
+    }
+
+
+    // insert items in DOM
+    function updateItems() {
+         document.querySelector('.items-waiting').innerHTML = '';
+         document.querySelector('.items-registered').innerHTML = '';     
+        const items = JSON.parse(localStorage.getItem("items"));
+        items.reverse();
+        items.forEach(item => {   
+                let selector;
+                if('' === item.id) {
+                    selector = '.items-waiting';
+                } else {
+                    selector = '.items-registered';
+                }
+
+                itemHTML = document.createElement('li');
+                itemHTML.textContent = '#' + item.id + ' ' + item.title;
+                document.querySelector(selector).append(itemHTML);                  
+        });
+        updateCounter();
+    }
+   
+    // update items number
+    function updateCounter() {
+        document.querySelector('.items-number').innerHTML = JSON.parse(localStorage.getItem("items")).length; 
+    }
+       
+
+    </script>
 </body>
 </html>
