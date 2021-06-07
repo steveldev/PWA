@@ -147,8 +147,10 @@
     // insert items in DOM
     function updateItems() {
          document.querySelector('.items-waiting').innerHTML = '';
-         document.querySelector('.items-registered').innerHTML = '';     
+         document.querySelector('.items-registered').innerHTML = '';  
+
         const items = JSON.parse(localStorage.getItem("items"));
+
         items.reverse();
         items.forEach(item => {   
                 let selector;
@@ -159,17 +161,57 @@
                 }
 
                 itemHTML = document.createElement('li');
-                itemHTML.textContent = '#' + item.id + ' ' + item.title;
-                document.querySelector(selector).append(itemHTML);                  
+                itemHTML.classList.add('d-flex','justify-content-between');
+                itemHTML.innerHTML = '<span>#' + item.id + ' ' + item.title+'</span';
+                itemHTML.innerHTML += '<span class="btn"><a href="/delete/' + item.id + '" title="Supprimer" class="btn-delete-item" id="' + item.id + '">&times;</a></span>';
+
+                document.querySelector(selector).append(itemHTML);                      
         });
+
         updateCounter();
+        
+        // refresh listeners
+        addListenerOnBtnDeleteItem();
     }
-   
+
+
+
     // update items number
     function updateCounter() {
         document.querySelector('.items-number').innerHTML = JSON.parse(localStorage.getItem("items")).length; 
     }
        
+
+
+    // btn-delete-item listener 
+    function addListenerOnBtnDeleteItem() {
+        document.querySelectorAll('.btn-delete-item').forEach( (btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                let confirmation = window.confirm('Confirmer la suppression');
+                if(confirmation) {                    
+                    itemId = e.target.id;
+                    itemTartget = e.target.href;
+                                         
+                    deleteItem(itemId);
+                    updateCounter();
+
+                    e.target.parentElement.parentElement.remove();
+                }
+            });
+        });
+    }
+   
+    // delete item
+    function deleteItem(id) {
+
+        let items = JSON.parse(localStorage.getItem("items"));
+
+        items = items.filter(x => x.id != id);
+
+        updateStore(items);
+    }
+
 
     </script>
 </body>
