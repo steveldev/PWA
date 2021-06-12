@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
     <link rel="manifest" href="./manifest.json">
 
+
     <script>
         window.addEventListener('load', () => {
             if("serviceWorker" in navigator) {
@@ -37,6 +38,8 @@
             margin-left:auto;
         }
         form .form-group:last-child {text-align:right;}
+
+        tr, td {border:0;}
 
     </style>
 </head>
@@ -76,16 +79,18 @@
             </div>
         </form>
 
-        <div class="d-flex justify-content-between align-items-center">
-            <h2>Items à synchroniser <span class="h5">(<a href="" title="Synchroniser les données">Synchroniser</a>)</span></h2>
-            
-        </div>
-        <ul class="items-waiting"></ul>
-        
-        <div class="d-flex justify-content-between align-items-center">
-            <h2>Items enregistrés</h2>
-        </div>
-        <ul class="items-registered"></ul>
+        <section class="item">
+            <h2>Item </h2>
+            <table class="item-meta"><tbody></tbody></table>
+        </section>
+
+        <section class="items">
+            <h2>Items </h2>
+            <table class="table table-hover items">
+                <tbody></tbody>
+            </table>
+        </section>
+
     </main>
 
 
@@ -127,51 +132,77 @@
         }
 
 
-    getData('https://jsonplaceholder.typicode.com/posts/');
+    //getData('https://jsonplaceholder.typicode.com/posts/');
+    let apiUrl = window.location.origin + '/api.php';
+    
+    getData(apiUrl);
+
     // Fetch / get data from url 
     async function getData(url) {
         try {
-            const items = await fetch(url).then(data => data.json());                     
-            updateStore(items);    //stock les données dans le local storage    
-        } catch (e) {
-            console.log('Erreur : ' + e);
+           // const items = await fetch(url).then(data => data);  
+
+            await fetch(url)
+            .then(
+                function(response) {
+                if (response.status !== 200) {
+                    console.log('Error : Status Code: ' + response.status);
+                    return;
+                }
+
+                // Examine the text in the response
+                response.json().then(function(data) {               
+                    updateStore(data);  
+                });
+                }
+            )
+            .catch(function(err) {
+                console.log('Fetch Error :-S', err);
+            });
+
+           // console.log(items);    
+        } catch (error) {
+            console.error(error);
         }
     }
 
     function updateStore(items) {
+        // update local store
         localStorage.setItem("items", JSON.stringify(items));                  
         updateItems();
+
+        
+        // update online store if online
+           
+            // fetch post
     }
 
 
     // insert items in DOM
     function updateItems() {
-         document.querySelector('.items-waiting').innerHTML = '';
-         document.querySelector('.items-registered').innerHTML = '';  
+         document.querySelector('table.items tbody').innerHTML = '';
 
         const items = JSON.parse(localStorage.getItem("items"));
 
         items.reverse();
-        items.forEach(item => {   
-                let selector;
-                if('' === item.id) {
-                    selector = '.items-waiting';
-                } else {
-                    selector = '.items-registered';
-                }
+        items.forEach(item => { 
+            let fullName = (item.societe) ? item.societe : item.fname + ' ' + item.name;
+            itemHTML = document.createElement('tr');
+            itemHTML.innerHTML = '<td>' + item.id + '</td>';
+            itemHTML.innerHTML += '<td>' + fullName+' </td>';
+            itemHTML.innerHTML += '<td class="text-end">';
+            itemHTML.innerHTML += '<a href="#" title="Editer" class="btn-edit-item" id="' + item.id + '">Editer</a>';
+            itemHTML.innerHTML += '<a href="/delete/' + item.id + '" title="Supprimer" class="btn-delete-item" id="' + item.id + '">&times;</a>';
+            itemHTML.innerHTML += '</td>';
 
-                itemHTML = document.createElement('li');
-                itemHTML.classList.add('d-flex','justify-content-between');
-                itemHTML.innerHTML = '<span>#' + item.id + ' ' + item.title+'</span';
-                itemHTML.innerHTML += '<span class="btn"><a href="/delete/' + item.id + '" title="Supprimer" class="btn-delete-item" id="' + item.id + '">&times;</a></span>';
-
-                document.querySelector(selector).append(itemHTML);                      
+            document.querySelector('table.items tbody').append(itemHTML);                      
         });
 
         updateCounter();
         
         // refresh listeners
         addListenerOnBtnDeleteItem();
+        addListenerOnBtnEditItem();
     }
 
 
@@ -196,6 +227,7 @@
                     deleteItem(itemId);
                     updateCounter();
 
+                    // remove item in DOM
                     e.target.parentElement.parentElement.remove();
                 }
             });
@@ -207,12 +239,42 @@
 
         let items = JSON.parse(localStorage.getItem("items"));
 
+        // filter items where id != id item
         items = items.filter(x => x.id != id);
 
         updateStore(items);
     }
 
 
+    // edit item btn
+    
+    function addListenerOnBtnEditItem() {
+        document.querySelectorAll('.btn-edit-item').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                
+                let items = JSON.parse(localStorage.getItem("items"));
+                let item = items.filter(x => x.id === e.target.id);
+
+                item = item[0];
+
+                // list des clés / valeurs de l'objet
+                let content = '';
+                
+                for(let key in item) {
+                    if(isNaN(key)) {
+                        content += '<tr>';
+                        content += '<td>' + key + '</td>';
+                        content += '<td>' + item[key] + '</td>';
+                        content += '</tr>';
+                    } 
+                }
+
+                document.querySelector('table.item-meta tbody').innerHTML = content;
+            })
+            
+        });
+    }
     </script>
 </body>
 </html>
